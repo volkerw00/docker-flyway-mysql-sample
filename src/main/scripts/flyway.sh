@@ -7,7 +7,9 @@ MYSQL_CONTAINER_NAME=${MYSQL_CONTAINER_NAME:-"me310-mysql"}
     
 if MYSQL_SERVER_AVAILABLE="$(docker inspect $MYSQL_CONTAINER_NAME)"; [[ $MYSQL_SERVER_AVAILABLE != "[]" ]]; then
     echo "Linking available mysql container $MYSQL_CONTAINER_NAME"
-    MYSQL_SERVER_LINK="--link $MYSQL_CONTAINER_NAME"
+    NETWORKING="--link $MYSQL_CONTAINER_NAME"
+else
+    NETWORKING="--net=host"
 fi
 
 FLYWAY_CONF_DIR=${FLYWAY_CONF_DIR:-"$MAIN_DIR/resources/conf"}
@@ -17,8 +19,8 @@ FLYWAY_SQL_DIR=${FLYWAY_SQL_DIR:-"$MAIN_DIR/resources/sql"}
 [[ $(uname) = *"CYGWIN"* ]] && FLYWAY_SQL_DIR=${FLYWAY_SQL_DIR//\/cygdrive\/c/C:}
 
 echo "Running flyway..."
-echo "docker run --name $CONTAINER_NAME $MYSQL_SERVER_LINK -v $FLYWAY_CONF_DIR:/flyway/conf -v $FLYWAY_SQL_DIR:/flyway/sql boxfuse/flyway $@"
-docker run --name $CONTAINER_NAME $MYSQL_SERVER_LINK -v $FLYWAY_CONF_DIR:/flyway/conf -v $FLYWAY_SQL_DIR:/flyway/sql boxfuse/flyway $@
+echo "docker run --name $CONTAINER_NAME $NETWORKING -v $FLYWAY_CONF_DIR:/flyway/conf -v $FLYWAY_SQL_DIR:/flyway/sql boxfuse/flyway $@"
+docker run --name $CONTAINER_NAME $NETWORKING -v $FLYWAY_CONF_DIR:/flyway/conf -v $FLYWAY_SQL_DIR:/flyway/sql boxfuse/flyway $@
 
 docker stop $CONTAINER_NAME &>/dev/null
 docker rm $CONTAINER_NAME &>/dev/null
